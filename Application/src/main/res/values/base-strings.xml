@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<resources>
+    <string name="app_name">Bluetooth Chat</string>
+    <string name="about">
+            This application allows two Android devices to carry out text chat session over
+            Bluetooth.\n
+            This Application does not require an internet connection for its working:\n
+            This is version 1.0 of this Application.\n
+            Many more features are yet to be added, stay tuned for those.
+
+    </string>
+    <string name="help1">This app requires 2 devices, one device will start connection and other device will accept that connection.</string>
+    <string name="help2">The bluetooth discovery mode of other device needs to be turned on while your device search for it. </string>
+    <string name="help3">Once search is completed it will give list of all devices whose Bluetooth discovery is turned on and is ready to get connected.</string>
+    <string name="help4">Now click on the name of other device from the list of devices.</string>
+    <string name="help5">Once both devices are connected, the chat session will be initiated and you will enter chat window.</string>
+    <string name="help6">If back button is pressed the chat session will be terminated.</string>
+    <string name="help7">You can also make your device discoverable to other devices by clicking on the Make discoverable button.</string>
+    <string name="help8">You can Rename your device for bluetooth connection by clicking on the Change Device Name in Main Menu.</string>
+
+
+</resources>

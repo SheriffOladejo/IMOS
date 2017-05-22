@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "E:\\AndroidStudioProjects\\Chat applications\\BluetoothChat\\Application\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi\\ic_action_device_access_bluetooth_searching.png",
+        "source": "E:\\AndroidStudioProjects\\Chat applications\\BluetoothChat\\Application\\src\\main\\res\\drawable-mdpi\\ic_action_device_access_bluetooth_searching.png"
+    },
+    {
+        "merged": "E:\\AndroidStudioProjects\\Chat applications\\BluetoothChat\\Application\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi\\ic_launcher.png",
+        "source": "E:\\AndroidStudioProjects\\Chat applications\\BluetoothChat\\Application\\src\\main\\res\\drawable-mdpi\\ic_launcher.png"
+    }
+]
