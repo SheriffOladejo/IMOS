@@ -43,9 +43,7 @@ public class Mainmenu extends Activity {
         ColorDrawable colorDrawable = new ColorDrawable(Color.parseColor("#d6e0f5"));
         actionBar.setBackgroundDrawable(colorDrawable);
         actionBar.setTitle(Html.fromHtml("<font color='#000000'>Bluetooth Chat</font>"));
-        /*int titleId = getResources().getIdentifier("action_bar_title", "id", "android");
-        TextView abTitle = (TextView) findViewById(titleId);
-        abTitle.setTextColor(Color.WHITE);*/
+        
 
 
         TextView t1 = (TextView) findViewById(R.id.i1);
