@@ -16,17 +16,38 @@
 
 package com.aduech.android.bluetoothchat;
 
+import android.Manifest;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -50,6 +71,11 @@ import com.aduech.android.common.logger.Log;
 public class BluetoothChatFragment extends Fragment {
 
     private static final String TAG = "BluetoothChatFragment";
+
+    Camera camera;
+    boolean isFlash = false;
+    boolean isOn = false;
+    Camera.Parameters parameters;
 
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
@@ -99,8 +125,20 @@ public class BluetoothChatFragment extends Fragment {
             Toast.makeText(activity, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             activity.finish();
         }
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CAMERA}, 1);
+        }
+       // getCamera();
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        if(camera != null){
+            camera.release();
+            camera = null;
+        }
+    }
 
     @Override
     public void onStart() {
@@ -276,6 +314,7 @@ public class BluetoothChatFragment extends Fragment {
      * The Handler that gets information back from the BluetoothChatService
      */
     private final Handler mHandler = new Handler() {
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void handleMessage(Message msg) {
             FragmentActivity activity = getActivity();
@@ -305,7 +344,8 @@ public class BluetoothChatFragment extends Fragment {
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
+                    alertUser(readMessage);
+                    mConversationArrayAdapter.add(readMessage);
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -324,6 +364,80 @@ public class BluetoothChatFragment extends Fragment {
             }
         }
     };
+
+    private static Activity activity;
+
+    private void alertUser(String message){
+        activity = getActivity();
+        Intent intent = new Intent(getContext(), activity.getClass());
+        PendingIntent pendingIntent = PendingIntent.getActivity(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext());
+        builder.setAutoCancel(true)
+                .setSmallIcon(R.drawable.ic_email)
+                .setContentTitle("You have a new Message")
+                .setContentText(message)
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager) getContext(). getSystemService(Context.NOTIFICATION_SERVICE);
+
+        String channelId = "0";
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "Channel human readable title", NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(channel);
+            builder.setChannelId(channelId);
+        }
+
+        PowerManager pm = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "IMOS:Wakelock");
+        wakeLock.acquire();
+
+        notificationManager.notify(0,builder.build());
+    }
+
+//    @RequiresApi(api = Build.VERSION_CODES.M)
+//    private void flashlight() {
+//
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+//            this.camera = new Camera(getContext());
+////                cameraManager = (CameraManager) getActivity().getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
+////                id = cameraManager.getCameraIdList()[0];
+////                cameraManager.setTorchMode(id, true);
+//            final Camera mCam;
+//            Camera.Parameters p;
+//            mCam = Camera.open();
+//            p= mCam.getParameters();
+//            p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+//            mCam.setParameters(p);
+//            SurfaceTexture surfaceTexture = new SurfaceTexture(0);
+//            try{
+//                mCam.setPreviewTexture(surfaceTexture);
+//            }
+//            catch(Exception e){
+//
+//            }
+//            mCam.startPreview();
+//
+//            new CountDownTimer(2000, 1000){
+//                @Override
+//                public void onTick(long millisUntilFinished) {
+//
+//                }
+//
+//                @Override
+//                public void onFinish() {
+//                    try {
+////                            cameraManager.setTorchMode(id, false);
+//                        mCam.stopPreview();
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }.start();
+//        }
+//
+//    }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {

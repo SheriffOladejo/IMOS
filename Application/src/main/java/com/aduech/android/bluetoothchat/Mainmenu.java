@@ -40,6 +40,7 @@ public class Mainmenu extends Activity {
         ActionBar actionBar;
 
         actionBar = getActionBar();
+        actionBar.setTitle("Home");
         ColorDrawable colorDrawable = new ColorDrawable(Color.parseColor("#d6e0f5"));
         actionBar.setBackgroundDrawable(colorDrawable);
         actionBar.setTitle(Html.fromHtml("<font color='#000000'>Bluetooth Chat</font>"));
@@ -101,6 +102,7 @@ public class Mainmenu extends Activity {
             final EditText input = new EditText(this);
             // Specify the type of input expected; this, for aduech, sets the input as a password, and will mask the text
             input.setInputType(InputType.TYPE_CLASS_TEXT );
+            input.setText(current_name);
             builder.setView(input);
 
             // Set up the buttons

@@ -17,12 +17,27 @@
 
 package com.aduech.android.bluetoothchat;
 
+import android.Manifest;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.hardware.Camera;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 import android.widget.ViewAnimator;
 
 import com.aduech.android.common.activities.SampleActivityBase;
@@ -41,18 +56,77 @@ import com.aduech.android.common.logger.MessageOnlyLogFilter;
 public class MainActivity extends SampleActivityBase {
 
     public static final String TAG = "MainActivity";
+    private static final int PERMISSION_REQUEST_CODE = 1;
 
     // Whether the Log Fragment is currently shown
     private boolean mLogShown;
+
+    Camera camera;
+    boolean isFlash = false;
+    boolean isOn = false;
+    Camera.Parameters parameters;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch(requestCode){
+            case 1:
+                if((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)){
+                    //Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    //Toast.makeText(MainActivity.this, "Permission Denied", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void alertUser(){
+        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this);
+        builder.setAutoCancel(true)
+                .setSmallIcon(R.drawable.ic_email)
+                .setContentTitle("This is a test")
+                .setContentText("This is a test content message")
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        String channelId = "0";
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "Channel human readable title", NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(channel);
+            builder.setChannelId(channelId);
+        }
+
+        notificationManager.notify(0,builder.build());
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //getActionBar().setTitle("Home");
+
+       //alertUser();
+
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
+        }
+
+        BluetoothChatFragment fragment = new BluetoothChatFragment();
+
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            BluetoothChatFragment fragment = new BluetoothChatFragment();
+            transaction.replace(R.id.sample_content_fragment, fragment);
+            transaction.commit();
+        }else{
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.sample_content_fragment, fragment);
             transaction.commit();
         }
@@ -62,6 +136,37 @@ public class MainActivity extends SampleActivityBase {
         actionBar = getActionBar();
         ColorDrawable colorDrawable = new ColorDrawable(Color.parseColor("#000066"));
         actionBar.setBackgroundDrawable(colorDrawable);*/
+    }
+
+    private void getCamera(){
+        if(getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)){
+            camera = Camera.open();
+            parameters = camera.getParameters();
+            isFlash = true;
+        }
+
+        if(isFlash){
+            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+            camera.setParameters(parameters);
+            camera.startPreview();
+            Log.d(TAG, "Camera preview started");
+            isFlash = true;
+        }
+        else{
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Error...");
+            builder.setMessage("Flash is not available on this device");
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();;
+                    finish();
+                }
+            });
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+        }
+
     }
 
     @Override
@@ -109,9 +214,9 @@ public class MainActivity extends SampleActivityBase {
         logWrapper.setNext(msgFilter);
 
         // On screen logging via a fragment with a TextView.
-        LogFragment logFragment = (LogFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.log_fragment);
-        msgFilter.setNext(logFragment.getLogView());
+//        LogFragment logFragment = (LogFragment) getSupportFragmentManager()
+//                .findFragmentById(R.id.log_fragment);
+//        msgFilter.setNext(logFragment.getLogView());
 
         Log.i(TAG, "Ready");
     }
